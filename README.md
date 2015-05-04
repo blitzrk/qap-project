@@ -1,6 +1,6 @@
 # Testing
 
-Can be run with `go run main.go matmath.go` from the root dir.
+Can be run with `go install && qap-project` from the root projectd betair.
 
 ## To Do
 
