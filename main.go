@@ -7,13 +7,12 @@ import (
 )
 
 func main() {
-	f, err := ioutil.ReadFile("bur26a.dat")
+	data, err := readDat("bur26a.dat")
 	if err != nil {
-		fmt.Println(err)
-		return
+	  fmt.Println(err)
+	  return
 	}
-
-	data := dat.Read(f)
+	
 	n := data[0][0][0]
 	times := data[1]
 	freqs := data[2]
@@ -28,4 +27,13 @@ func main() {
 	fmt.Println(totalF)
 	// 	fmt.Println()
 	// 	fmt.Println(apply(freqs, func(x float64) float64 { return n*n*x/totalF }))
+}
+
+func readDat(fname string) ([][][]float64, error) {
+	f, err := ioutil.ReadFile(fname)
+	if err != nil {
+		return nil, err
+	}
+  
+  return dat.Read(f), nil
 }
