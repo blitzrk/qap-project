@@ -1,15 +1,7 @@
 # Testing
 
-Can be run with `go install && qap-project` from the root projectd betair.
+Can be run with `go install && qap-project` from the root project dir.
 
-## To Do
+## Report Document
 
-Letter transition pairs have two big, generally non-language specific features:
-
-1. Two classes of letters: consonants and vowels
-1. The pair transition frequency is related to the product of each letter's frequency
-
-The exceptions to these rules are language-specific, so we ignore them in our attempt to create a random dataset for something language-like.
-
-However, we still must make some assumptions to fill in the gaps for our data generation algorithm. Vowels usually have a higher mean frequency of appearance than 
-consonants. 
+[Google Doc](https://docs.google.com/document/d/1Eodr9c93kn12N-Pv7-hREflbVCoCctZchpWQ_FhAojI/edit?usp=sharing)
