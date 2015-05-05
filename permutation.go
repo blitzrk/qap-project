@@ -1,27 +1,32 @@
 package main
 
 import (
-	"fmt"
+	"math/big"
 )
 
 var (
 	memo []uint64 = []uint64{1}
 )
 
-func main() {
-	p1 := Permutation{4, 3, 2, 1}
-	p2 := Permutation{3, 1, 2, 4}
-
-	fmt.Println("Hello, playground")
-
-	fmt.Println(p1, p1.Hash())
-	fmt.Println(p2, p2.Hash())
-}
-
 type Permutation []uint64
+type FastStore *big.Int
+
+func NewFS(x int64) FastStore {
+	return FastStore(big.NewInt(x))
+}
 
 func (p Permutation) Hash() uint64 {
 	return hash(p, 0)
+}
+
+func (p Permutation) StoreIn(store FastStore) {
+	n := 0 << p.Hash()
+	(*store).SetBit(store, n, uint(1))
+}
+
+func (p Permutation) CheckIn(store FastStore) bool {
+	v := p.Hash()
+	return (*store).Bit(int(v)) == uint(1)
 }
 
 func hash(p Permutation, pos int) uint64 {
