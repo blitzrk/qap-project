@@ -9,6 +9,12 @@ import (
 
 func main() {
 	readQAPLIBData()
+	graph, err := genData(26, 1/3)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println()
+	fmt.Println(graph)
 }
 
 func readQAPLIBData() {
