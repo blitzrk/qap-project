@@ -8,8 +8,8 @@ import (
 )
 
 func main() {
-	readQAPLIBData()
-	graph, err := genData(26, 1/3)
+	// readQAPLIBData()
+	graph, err := genData(13, 1/3)
 	if err != nil {
 		panic(err)
 	}

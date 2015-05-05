@@ -22,8 +22,6 @@ func genData(n int, spread float64) (matrix.Matrix, error) {
 	for i := 0; i < n; i++ {
 		k[i] = float64(z.Uint64())
 	}
-	fmt.Println()
-	fmt.Println(k)
 
 	// Populate ideal bigram matrix
 	g := matrix.Matrix(make([][]matrix.Element, n))

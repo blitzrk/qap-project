@@ -11,22 +11,25 @@ var (
 type Permutation []uint64
 type FastStore *big.Int
 
-func NewFS(x int64) FastStore {
-	return FastStore(big.NewInt(x))
+func NewFS() FastStore {
+	return FastStore(&big.Int{})
 }
 
+// Hashes a permutation of fixed length n to a number between
+// 0 and n!-1 so that a related state may be toggled in a bit
+// array.
 func (p Permutation) Hash() uint64 {
 	return hash(p, 0)
 }
 
 func (p Permutation) StoreIn(store FastStore) {
-	n := 0 << p.Hash()
-	(*store).SetBit(store, n, uint(1))
+	(*store).SetBit(store, int(p.Hash()), uint(1))
 }
 
 func (p Permutation) CheckIn(store FastStore) bool {
-	v := p.Hash()
-	return (*store).Bit(int(v)) == uint(1)
+	// Bug: Bit takes int, so this only works for permutations
+	// up to 20 elements for 64-bit computers
+	return (*store).Bit(int(p.Hash())) == uint(1)
 }
 
 func hash(p Permutation, pos int) uint64 {
@@ -51,21 +54,3 @@ func fact(i uint64) uint64 {
 	}
 	return memo[i]
 }
-
-// BigInts shouldn't be needed
-//
-// func factorial(n *big.Int) (result *big.Int) {
-// 	result = new(big.Int)
-
-// 	switch n.Cmp(&big.Int{}) {
-// 	case -1, 0:
-// 		result.SetInt64(1)
-// 	default:
-// 		fmt.Println("n = ", n)
-// 		result.Set(n)
-// 		var one big.Int
-// 		one.SetInt64(1)
-// 		result.Mul(result, factorial(n.Sub(n, &one)))
-// 	}
-// 	return
-// }
