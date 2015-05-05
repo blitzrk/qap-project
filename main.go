@@ -9,7 +9,8 @@ import (
 
 func main() {
 	// readQAPLIBData()
-	graph, err := genData(13, 1/3)
+	gen := Generator{13, 100000}
+	graph, err := gen.Flow(1/3)
 	if err != nil {
 		panic(err)
 	}
