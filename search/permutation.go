@@ -1,4 +1,4 @@
-package main
+package search
 
 import (
 	"math/big"
@@ -9,10 +9,10 @@ var (
 )
 
 type Permutation []uint64
-type FastStore *big.Int
+type fastStore *big.Int
 
-func NewFS() FastStore {
-	return FastStore(&big.Int{})
+func NewFS() fastStore {
+	return fastStore(&big.Int{})
 }
 
 // Hashes a permutation of fixed length n to a number between
@@ -22,11 +22,11 @@ func (p Permutation) Hash() uint64 {
 	return hash(p, 0)
 }
 
-func (p Permutation) StoreIn(store FastStore) {
+func (p Permutation) StoreIn(store fastStore) {
 	(*store).SetBit(store, int(p.Hash()), uint(1))
 }
 
-func (p Permutation) CheckIn(store FastStore) bool {
+func (p Permutation) CheckIn(store fastStore) bool {
 	// Bug: Bit takes int, so this only works for permutations
 	// up to 20 elements for 64-bit computers
 	return (*store).Bit(int(p.Hash())) == uint(1)
