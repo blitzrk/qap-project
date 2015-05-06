@@ -3,13 +3,14 @@ package main
 import (
 	"fmt"
 	"github.com/blitzrk/qap-project/dat"
+	"github.com/blitzrk/qap-project/data"
 	"github.com/blitzrk/qap-project/matrix"
 	"io/ioutil"
 )
 
 func main() {
 	// readQAPLIBData()
-	gen := Generator{13, 100000}
+	gen := data.New(13, 100000)
 	graph, err := gen.Flow(1/3)
 	if err != nil {
 		panic(err)

@@ -1,4 +1,4 @@
-package main
+package data
 
 import (
 	"fmt"
@@ -7,16 +7,20 @@ import (
 	"math/rand"
 )
 
-type Generator struct {
+type generator struct {
   n int
   fscale float64
 }
 
-func (g *Generator) Distance() (matrix.Matrix, error) {
+func New(n int, fscale float64) *generator {
+  return &generator{n, fscale}
+}
+
+func (g *generator) Distance() (matrix.Matrix, error) {
   return nil, nil
 }
 
-func (g *Generator) Flow(spread float64) (matrix.Matrix, error) {
+func (g *generator) Flow(spread float64) (matrix.Matrix, error) {
 	if spread < 0 || spread >= 1 {
 		return nil, fmt.Errorf("Error: spread must be between 0 and 1.")
 	}
