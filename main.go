@@ -18,10 +18,34 @@ func main() {
 }
 
 func testSearch() {
-	done := make(chan int)
-	go search.Run(13, 4, done)
-	time.Sleep(5 * time.Second)
-	done <- 1
+	// Setup data generator
+	gen := data.New(13, 100000)
+
+	// Generate data
+	dist, err := gen.Distance()
+	if err != nil {
+		panic(err)
+	}
+	flow, err := gen.Flow(1 / 3)
+	if err != nil {
+		panic(err)
+	}
+	cost, err := dist.Combine(flow)
+	if err != nil {
+		panic(err)
+	}
+
+	// Setup runner
+	runner := &search.Runner{
+		NumCPU: 4,
+		Cost:   cost,
+	}
+
+	// Run on all 4 cores
+	forceStop := make(chan int)
+	go runner.Run(forceStop)
+	time.Sleep(2 * time.Second)
+	forceStop <- 1
 }
 
 func testPermutation() {
