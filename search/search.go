@@ -36,6 +36,7 @@ loop:
 }
 
 func (r *Runner) search(perm permutation, radius int, done chan<- []uint8) {
+	// Radius cannot be less than 2!!!
 	h := perm.Hamming(radius)
 	collect := make(chan permutation)
 
@@ -51,7 +52,9 @@ func (r *Runner) search(perm permutation, radius int, done chan<- []uint8) {
 	}
 
 	// Change what gets sent here
-	done <- interpret(results, perm, radius)
+	if v, ok := interpret(results, perm, radius, r.Cost); ok {
+		done <- []uint8(v)
+	}
 }
 
 func greedy(p permutation, r *Runner, done chan<- permutation) {
@@ -61,16 +64,7 @@ func greedy(p permutation, r *Runner, done chan<- permutation) {
 	}
 	r.fs.Store(p)
 
-	// Find best neighbor
-	var bestPerm permutation
-	bestScore := math.Inf(1)
-	for _, v := range p.Neighborhood() {
-		score := Objective(r.Cost, v)
-		if score <= bestScore {
-			bestScore = score
-			bestPerm = v
-		}
-	}
+	bestPerm, bestScore := findBest(p.Neighborhood(), r.Cost)
 
 	// If best neighbor is worse than current, then we found a local min
 	if Objective(r.Cost, p) > bestScore {
@@ -83,6 +77,38 @@ func greedy(p permutation, r *Runner, done chan<- permutation) {
 	return
 }
 
-func interpret(rs []permutation, perm permutation, radius int) []uint8 {
-	return []uint8{}
+// Find best permutation
+func findBest(ps []permutation, cost matrix.Matrix4D) (bestPerm permutation, bestScore float64) {
+
+	bestScore = math.Inf(1)
+	for _, v := range ps {
+		if v == nil {
+			continue
+		}
+		score := Objective(cost, v)
+		if score <= bestScore {
+			bestScore = score
+			bestPerm = v
+		}
+	}
+
+	return
+}
+
+// Consider the number of nils (followed old path) and
+func interpret(rs []permutation, perm permutation, radius int, cost matrix.Matrix4D) (permutation, bool) {
+	// Count nils
+	var nils int
+	for _, v := range rs {
+		if v == nil {
+			nils++
+			continue
+		}
+	}
+
+	// TODO: Find variance of scores
+
+	bestPerm, _ := findBest(rs, cost)
+
+	return bestPerm, true
 }
