@@ -56,14 +56,6 @@ func (r *Runner) search(perm *permutation, done chan<- []uint8) {
 	go r.interpret(result, done)
 }
 
-func (r *Runner) greedy(p *permutation, done chan<- *runResult) {
-	if r.fs.Test(p) {
-		done <- nil
-		return
-	}
-	r.fs.Store(p)
-}
-
 // Find best permutation
 func (r *Runner) findBestNeighbor(center *permutation, done chan<- *runResult) {
 	n := len(center.Seq)
@@ -147,6 +139,14 @@ func (r *Runner) findBestHamming(center *permutation, dist int, done chan<- *run
 func (r *Runner) interpret(rs *runResult, done chan<- []uint8) {
 	// TODO: ALGORITHM HERE
 	done <- rs.Perm.Seq
+}
+
+func (r *Runner) greedy(p *permutation, done chan<- *runResult) {
+	if r.fs.Test(p) {
+		done <- nil
+		return
+	}
+	r.fs.Store(p)
 }
 
 func variance(x []float64) float64 {

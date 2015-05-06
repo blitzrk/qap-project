@@ -65,8 +65,8 @@ loop:
 
 func testPermutation() {
 	fs := search.NewFS()
-	p1 := search.NewPerm([]int{1, 2, 4, 3})
-	p2 := search.NewPerm([]int{4, 1, 2, 3})
+	p1 := search.NewPerm([]uint8{1, 2, 4, 3})
+	p2 := search.NewPerm([]uint8{4, 1, 2, 3})
 	fs.Store(p1)
 
 	fmt.Println()
