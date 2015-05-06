@@ -1,7 +1,6 @@
 package search
 
 import (
-	"math/big"
 	"math/rand"
 )
 
@@ -10,14 +9,6 @@ var (
 )
 
 type permutation []uint8
-
-type fastStore struct {
-	big.Int
-}
-
-func NewFS() *fastStore {
-	return &fastStore{big.Int{}}
-}
 
 // Create a permutation of 1...n from an int slice
 func NewPerm(p []int) permutation {
@@ -39,21 +30,28 @@ func RandPerm(n int) permutation {
 	return NewPerm(p)
 }
 
+func (p permutation) Neighborhood() []permutation {
+	n := len(p)
+	perms := make([]permutation, 0, n*(n-1)/2)
+
+	// Find 2-exchange neighborhood
+	for i := 0; i < n; i++ {
+		for j := i + 1; j < n; j++ {
+			perm := make(permutation, len(p))
+			copy(perm, p)
+			perm[j], perm[i] = p[i], p[j]
+			perms = append(perms, perm)
+		}
+	}
+
+	return perms
+}
+
 // Hashes a permutation of fixed length n to a number between
 // 0 and n!-1 so that a related state may be toggled in a bit
 // array.
 func (p permutation) Hash() uint64 {
 	return hash(p, 0)
-}
-
-func (fs *fastStore) Store(p permutation) {
-	(*fs).SetBit(&(fs.Int), int(p.Hash()), uint(1))
-}
-
-func (fs *fastStore) Test(p permutation) bool {
-	// Bug: Bit takes int, so this only works for permutations
-	// up to 20 elements for 64-bit computers
-	return (*fs).Bit(int(p.Hash())) == uint(1)
 }
 
 func hash(p permutation, pos int) uint64 {
