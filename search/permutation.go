@@ -9,10 +9,12 @@ var (
 )
 
 type Permutation []uint64
-type fastStore *big.Int
+type fastStore struct {
+	big.Int
+}
 
-func NewFS() fastStore {
-	return fastStore(&big.Int{})
+func NewFS() *fastStore {
+	return &fastStore{big.Int{}}
 }
 
 // Hashes a permutation of fixed length n to a number between
@@ -22,14 +24,14 @@ func (p Permutation) Hash() uint64 {
 	return hash(p, 0)
 }
 
-func (p Permutation) StoreIn(store fastStore) {
-	(*store).SetBit(store, int(p.Hash()), uint(1))
+func (fs *fastStore) Store(p Permutation) {
+	(*fs).SetBit(&(fs.Int), int(p.Hash()), uint(1))
 }
 
-func (p Permutation) CheckIn(store fastStore) bool {
+func (fs *fastStore) Test(p Permutation) bool {
 	// Bug: Bit takes int, so this only works for permutations
 	// up to 20 elements for 64-bit computers
-	return (*store).Bit(int(p.Hash())) == uint(1)
+	return (*fs).Bit(int(p.Hash())) == uint(1)
 }
 
 func hash(p Permutation, pos int) uint64 {

@@ -19,14 +19,14 @@ func testPermutation() {
 	fs := search.NewFS()
 	p1 := search.Permutation{1, 2, 4, 3}
 	p2 := search.Permutation{4, 1, 2, 3}
-	p1.StoreIn(fs)
+	fs.Store(p1)
 
 	fmt.Println()
 	fmt.Println(p1.Hash())
 	fmt.Println()
 	fmt.Println(p2.Hash())
 	fmt.Println()
-	fmt.Println(p1.CheckIn(fs), p2.CheckIn(fs))
+	fmt.Println(fs.Test(p1), fs.Test(p2))
 }
 
 func testGen() {
