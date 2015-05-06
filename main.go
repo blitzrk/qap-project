@@ -36,16 +36,28 @@ func testSearch() {
 	}
 
 	// Setup runner
+	maxTime := time.After(4 * time.Second)
 	runner := &search.Runner{
 		NumCPU: 4,
 		Cost:   cost,
 	}
 
 	// Run on all 4 cores
-	forceStop := make(chan int)
-	go runner.Run(forceStop)
-	time.Sleep(2 * time.Second)
-	forceStop <- 1
+	quit := make(chan int)
+	results := make(chan []uint8)
+	go runner.Run(quit, results)
+
+loop:
+	for {
+		select {
+		case res := <-results:
+			fmt.Println()
+			fmt.Println(res)
+		case <-maxTime:
+			quit <- 1
+			break loop
+		}
+	}
 }
 
 func testPermutation() {
