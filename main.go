@@ -7,18 +7,27 @@ import (
 	"github.com/blitzrk/qap-project/matrix"
 	"github.com/blitzrk/qap-project/search"
 	"io/ioutil"
+	"time"
 )
 
 func main() {
 	testQAPLIBData()
 	testGen()
 	testPermutation()
+	testSearch()
+}
+
+func testSearch() {
+	done := make(chan int)
+	go search.Run(13, 4, done)
+	time.Sleep(5 * time.Second)
+	done <- 1
 }
 
 func testPermutation() {
 	fs := search.NewFS()
-	p1 := search.Permutation{1, 2, 4, 3}
-	p2 := search.Permutation{4, 1, 2, 3}
+	p1 := search.NewPerm([]int{1, 2, 4, 3})
+	p2 := search.NewPerm([]int{4, 1, 2, 3})
 	fs.Store(p1)
 
 	fmt.Println()
