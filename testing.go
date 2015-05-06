@@ -7,6 +7,7 @@ import (
 	"github.com/blitzrk/qap-project/matrix"
 	"github.com/blitzrk/qap-project/search"
 	"io/ioutil"
+	"runtime"
 	"time"
 )
 
@@ -38,7 +39,7 @@ func testSearch() {
 	// Setup runner
 	maxTime := time.After(4 * time.Second)
 	runner := &search.Runner{
-		NumCPU: 4,
+		NumCPU: runtime.NumCPU(),
 		Cost:   cost,
 		Radius: 2,
 		Sample: 50,

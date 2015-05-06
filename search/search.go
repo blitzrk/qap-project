@@ -4,6 +4,7 @@ import (
 	"github.com/blitzrk/qap-project/matrix"
 	"math"
 	"math/rand"
+	"runtime"
 )
 
 type Runner struct {
@@ -15,6 +16,9 @@ type Runner struct {
 }
 
 func (r *Runner) Run(stop <-chan int, resultChan chan<- []uint8) {
+	// maximize CPU usage
+	runtime.GOMAXPROCS(r.NumCPU)
+
 	r.fs = NewFS()
 	n := len(r.Cost)
 	limit := make(chan int, r.NumCPU)
