@@ -39,10 +39,10 @@ func testSearch() {
 	// Setup runner
 	maxTime := time.After(4 * time.Second)
 	runner := &search.Runner{
-		NumCPU: runtime.NumCPU(),
-		Cost:   cost,
-		Radius: 2,
-		Sample: 50,
+		NumCPU:      runtime.NumCPU(),
+		Cost:        cost,
+		StartRadius: 2,
+		SampleSize:  50,
 	}
 
 	// Run on all 4 cores

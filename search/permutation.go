@@ -9,7 +9,10 @@ var (
 	memo []uint64 = []uint64{1}
 )
 
-type permutation []uint8
+type permutation struct {
+	Seq []uint8
+	pos int
+}
 
 // Create a permutation of 1...n from an int slice
 func NewPerm(p []int) permutation {
@@ -31,6 +34,7 @@ func RandPerm(n int) permutation {
 	return NewPerm(p)
 }
 
+// Returns all permutations within a 2-exchange neighborhood
 func (p permutation) Neighborhood() []permutation {
 	n := len(p)
 	perms := make([]permutation, 0, n*(n-1)/2)
@@ -48,11 +52,17 @@ func (p permutation) Neighborhood() []permutation {
 	return perms
 }
 
-// Returns all permutations within Hamming distance d
-func (p permutation) Hamming(d int) []permutation {
+// Returns the next permutation in a 2-exchange neighborhood of p
+func (p permutation) NextNeighbor(d int) permutation {
+	p.pos++
+	return RandPerm(len(p))
+}
+
+// Returns a random permutations within approximate Hamming distance d
+func (p permutation) NextHamming(d int) permutation {
 	if d < 2 {
 		panic(errors.New("No permutations have a Hamming distance less than 2"))
-		return []permutation{}
+		return nil
 	}
 
 	// After extensive research, no efficient algorithm for enumerating all permutations within
@@ -61,7 +71,7 @@ func (p permutation) Hamming(d int) []permutation {
 	// The cardinality for n=13, d=2 is 78. For d=3, it's 1,352 and for d=4, it's 15,093. An
 	// increase of 1 in the Hamming distance appears to approximately lead to an order of magnitude
 	// increase of 1. Thus for now we'll recursively sample 10 permutations
-	return []permutation{RandPerm(13)}
+	return RandPerm(len(p))
 }
 
 // Hashes a permutation of fixed length n to a number between

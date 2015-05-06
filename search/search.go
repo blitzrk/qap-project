@@ -8,11 +8,11 @@ import (
 )
 
 type Runner struct {
-	NumCPU int
-	Cost   matrix.Matrix4D
-	Radius int
-	Sample int
-	fs     *fastStore
+	NumCPU      int
+	Cost        matrix.Matrix4D
+	StartRadius int
+	SampleSize  int
+	fs          *fastStore
 }
 
 func (r *Runner) Run(stop <-chan int, resultChan chan<- []uint8) {
@@ -29,7 +29,7 @@ loop:
 		select {
 		case limit <- 1:
 			p := RandPerm(n)
-			go r.search(p, r.Radius, done)
+			go r.search(p, done)
 		case res := <-done:
 			resultChan <- []uint8(res)
 			<-limit
@@ -39,29 +39,30 @@ loop:
 	}
 }
 
-func (r *Runner) search(perm permutation, radius int, done chan<- []uint8) {
-	// Radius cannot be less than 2!!!
-	h := perm.Hamming(radius)
-	collect := make(chan permutation)
+type runResult struct {
+	Perm   permutation
+	Score  float64
+	Nils   int
+	Var    float64
+	Center permutation
+	FinalR int
+}
 
-	for i := 0; i < r.Sample; i++ {
-		p := h[rand.Intn(len(h))]
-		go greedy(p, r, collect)
-	}
+func (r *Runner) search(perm permutation, done chan<- []uint8) {
+	collect := make(chan *runResult)
+	go r.findBestNeighbor(perm, collect)
 
-	results := make([]permutation, 0, r.Sample)
+	results := make([]*runResult, 0, r.Sample)
 	for i := 0; i < r.Sample; i++ {
 		res := <-collect
 		results = append(results, res)
 	}
 
 	// Change what gets sent here
-	if v, ok := interpret(results, perm, radius, r.Cost); ok {
-		done <- []uint8(v)
-	}
+	go r.interpret(results, done)
 }
 
-func greedy(p permutation, r *Runner, done chan<- permutation) {
+func (r *Runner) greedy(p permutation, done chan<- *runResult) {
 	if r.fs.Test(p) {
 		done <- nil
 		return
@@ -82,37 +83,104 @@ func greedy(p permutation, r *Runner, done chan<- permutation) {
 }
 
 // Find best permutation
-func findBest(ps []permutation, cost matrix.Matrix4D) (bestPerm permutation, bestScore float64) {
-
-	bestScore = math.Inf(1)
-	for _, v := range ps {
-		if v == nil {
-			continue
-		}
-		score := Objective(cost, v)
-		if score <= bestScore {
-			bestScore = score
-			bestPerm = v
-		}
+func (r *Runner) findBestNeighbor(center permutation, done chan<- *runResult) {
+	n := len(center)
+	size := n * (n - 1) / 2
+	if size > r.SampleSize {
+		size = r.SampleSize
 	}
 
-	return
-}
-
-// Consider the number of nils (followed old path) and
-func interpret(rs []permutation, perm permutation, radius int, cost matrix.Matrix4D) (permutation, bool) {
-	// Count nils
+	var bestPerm permutation
+	bestScore := math.Inf(1)
 	var nils int
-	for _, v := range rs {
+	scores := make([]float64, size)
+
+	for i := 0; i < size; i++ {
+		neighbor := p.NextNeighbor()
 		if v == nil {
 			nils++
 			continue
 		}
+
+		score := r.Objective(neighbor)
+		scores[i] = score
+
+		if score <= bestScore {
+			bestScore = score
+			bestPerm = neighbor
+		}
 	}
+
+	vari := variance(scores)
+
+	done <- &runResult{
+		Perm:   bestPerm,
+		Score:  bestScore,
+		Nils:   nils,
+		Var:    vari,
+		Center: center,
+		FinalR: 2,
+	}
+}
+
+// Find best permutation from sampled APPROXIMATE Hamming space
+// TODO: predict size of Hamming for max sample size
+func (r *Runner) findBestHamming(center permutation, dist int, done chan<- *runResult) {
+	var bestPerm permutation
+	bestScore := math.Inf(1)
+	var nils int
+	scores := make([]float64, r.SampleSize)
+
+	for i := 0; i < r.SampleSize; i++ {
+		neighbor := p.NextHamming(dist)
+		if v == nil {
+			nils++
+			continue
+		}
+
+		score := r.Objective(neighbor)
+		scores[i] = score
+
+		if score <= bestScore {
+			bestScore = score
+			bestPerm = neighbor
+		}
+	}
+
+	vari := variance(scores)
+
+	done <- &runResult{
+		Perm:   bestPerm,
+		Score:  bestScore,
+		Nils:   nils,
+		Var:    vari,
+		Center: center,
+		FinalR: dist,
+	}
+}
+
+// Consider the number of nils (followed old path) and
+func (r *Runner) interpret(rs *runResult) (permutation, bool) {
 
 	// TODO: Find variance of scores
 
 	bestPerm, _ := findBest(rs, cost)
 
 	return bestPerm, true
+}
+
+func variance(x []float64) float64 {
+	var sum float64
+	for _, v := range x {
+		sum += v
+	}
+	mean := sum / len(x)
+
+	var sumsq float64
+	for _, v := range x {
+		sumsq += math.Pow(v-mean, 2)
+	}
+	vari := sumsq / len(x)
+
+	return vari
 }
