@@ -8,16 +8,16 @@ import (
 )
 
 type generator struct {
-  n int
-  fscale float64
+	n      int
+	fscale float64
 }
 
 func New(n int, fscale float64) *generator {
-  return &generator{n, fscale}
+	return &generator{n, fscale}
 }
 
 func (g *generator) Distance() (matrix.Matrix, error) {
-  return nil, nil
+	return nil, nil
 }
 
 func (g *generator) Flow(spread float64) (matrix.Matrix, error) {

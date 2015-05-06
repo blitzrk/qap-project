@@ -11,7 +11,7 @@ import (
 func main() {
 	// readQAPLIBData()
 	gen := data.New(13, 100000)
-	graph, err := gen.Flow(1/3)
+	graph, err := gen.Flow(1 / 3)
 	if err != nil {
 		panic(err)
 	}
