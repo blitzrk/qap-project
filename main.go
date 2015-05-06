@@ -31,13 +31,20 @@ func testPermutation() {
 
 func testGen() {
 	gen := data.New(13, 100000)
-	graph, err := gen.Flow(1 / 3)
+
+	dist, err := gen.Distance()
+	if err != nil {
+		panic(err)
+	}
+	flow, err := gen.Flow(1 / 3)
 	if err != nil {
 		panic(err)
 	}
 
 	fmt.Println()
-	fmt.Println(graph)
+	fmt.Println(dist)
+	fmt.Println()
+	fmt.Println(flow)
 }
 
 func testQAPLIBData() {

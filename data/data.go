@@ -17,7 +17,16 @@ func New(n int, fscale float64) *generator {
 }
 
 func (g *generator) Distance() (matrix.Matrix, error) {
-	return nil, nil
+	m := matrix.Matrix(make([][]matrix.Element, g.n))
+
+	for i := 0; i < g.n; i++ {
+		m[i] = make([]matrix.Element, g.n)
+		for j := 0; j < g.n; j++ {
+			m[i][j] = matrix.Element(rand.Float64())
+		}
+	}
+
+	return m, nil
 }
 
 func (g *generator) Flow(spread float64) (matrix.Matrix, error) {
@@ -28,12 +37,12 @@ func (g *generator) Flow(spread float64) (matrix.Matrix, error) {
 	// Create Zipf generator
 	scale := 1000
 	r := rand.New(rand.NewSource(0))
-	z := rand.NewZipf(r, 1.01, float64(g.n), uint64(scale))
+	zipf := rand.NewZipf(r, 1.01, float64(g.n), uint64(scale))
 
 	// Populate frequencies of unigrams
 	k := make([]float64, g.n)
 	for i := 0; i < g.n; i++ {
-		k[i] = float64(z.Uint64())
+		k[i] = float64(zipf.Uint64())
 	}
 
 	// Populate ideal bigram matrix
