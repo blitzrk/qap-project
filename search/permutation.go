@@ -15,16 +15,16 @@ type permutation struct {
 }
 
 // Create a permutation of 1...n from an int slice
-func NewPerm(p []int) permutation {
+func NewPerm(p []int) *permutation {
 	perm := make([]uint8, len(p))
 	for i, v := range p {
 		perm[i] = uint8(v)
 	}
-	return perm
+	return &permutation{perm, 0}
 }
 
 // Create random permutation of 1...n
-func RandPerm(n int) permutation {
+func RandPerm(n int) *permutation {
 	p := rand.Perm(n)
 
 	for i, v := range p {
@@ -35,17 +35,17 @@ func RandPerm(n int) permutation {
 }
 
 // Returns all permutations within a 2-exchange neighborhood
-func (p permutation) Neighborhood() []permutation {
-	n := len(p)
-	perms := make([]permutation, 0, n*(n-1)/2)
+func (p *permutation) Neighborhood() []*permutation {
+	n := len(p.Seq)
+	perms := make([]*permutation, 0, n*(n-1)/2)
 
 	// Find 2-exchange neighborhood
 	for i := 0; i < n; i++ {
 		for j := i + 1; j < n; j++ {
-			perm := make(permutation, len(p))
-			copy(perm, p)
-			perm[j], perm[i] = p[i], p[j]
-			perms = append(perms, perm)
+			perm := make([]uint8, len(p.Seq))
+			copy(perm, p.Seq)
+			perm[j], perm[i] = p.Seq[i], p.Seq[j]
+			perms = append(perms, &permutation{perm, 0})
 		}
 	}
 
@@ -53,13 +53,13 @@ func (p permutation) Neighborhood() []permutation {
 }
 
 // Returns the next permutation in a 2-exchange neighborhood of p
-func (p permutation) NextNeighbor(d int) permutation {
+func (p *permutation) NextNeighbor() *permutation {
 	p.pos++
-	return RandPerm(len(p))
+	return RandPerm(len(p.Seq))
 }
 
 // Returns a random permutations within approximate Hamming distance d
-func (p permutation) NextHamming(d int) permutation {
+func (p *permutation) NextHamming(d int) *permutation {
 	if d < 2 {
 		panic(errors.New("No permutations have a Hamming distance less than 2"))
 		return nil
@@ -71,25 +71,25 @@ func (p permutation) NextHamming(d int) permutation {
 	// The cardinality for n=13, d=2 is 78. For d=3, it's 1,352 and for d=4, it's 15,093. An
 	// increase of 1 in the Hamming distance appears to approximately lead to an order of magnitude
 	// increase of 1. Thus for now we'll recursively sample 10 permutations
-	return RandPerm(len(p))
+	return RandPerm(len(p.Seq))
 }
 
 // Hashes a permutation of fixed length n to a number between
 // 0 and n!-1 so that a related state may be toggled in a bit
 // array.
-func (p permutation) Hash() uint64 {
+func (p *permutation) Hash() uint64 {
 	return hash(p, 0)
 }
 
-func hash(p permutation, pos int) uint64 {
-	n := len(p)
+func hash(p *permutation, pos int) uint64 {
+	n := len(p.Seq)
 	if pos >= n {
 		return 0
 	}
 
-	s, factor := p[pos], p[pos]
+	s, factor := p.Seq[pos], p.Seq[pos]
 	for i := 0; i < pos; i++ {
-		if p[i] < s {
+		if p.Seq[i] < s {
 			factor--
 		}
 	}

@@ -3,7 +3,6 @@ package search
 import (
 	"github.com/blitzrk/qap-project/matrix"
 	"math"
-	"math/rand"
 	"runtime"
 )
 
@@ -40,64 +39,47 @@ loop:
 }
 
 type runResult struct {
-	Perm   permutation
+	Perm   *permutation
 	Score  float64
 	Nils   int
 	Var    float64
-	Center permutation
+	Center *permutation
 	FinalR int
 }
 
-func (r *Runner) search(perm permutation, done chan<- []uint8) {
+func (r *Runner) search(perm *permutation, done chan<- []uint8) {
 	collect := make(chan *runResult)
 	go r.findBestNeighbor(perm, collect)
 
-	results := make([]*runResult, 0, r.Sample)
-	for i := 0; i < r.Sample; i++ {
-		res := <-collect
-		results = append(results, res)
-	}
-
 	// Change what gets sent here
-	go r.interpret(results, done)
+	result := <-collect
+	go r.interpret(result, done)
 }
 
-func (r *Runner) greedy(p permutation, done chan<- *runResult) {
+func (r *Runner) greedy(p *permutation, done chan<- *runResult) {
 	if r.fs.Test(p) {
 		done <- nil
 		return
 	}
 	r.fs.Store(p)
-
-	bestPerm, bestScore := findBest(p.Neighborhood(), r.Cost)
-
-	// If best neighbor is worse than current, then we found a local min
-	if Objective(r.Cost, p) > bestScore {
-		done <- p
-		return
-	}
-
-	// Otherwise follow the best neighbor
-	greedy(bestPerm, r, done)
-	return
 }
 
 // Find best permutation
-func (r *Runner) findBestNeighbor(center permutation, done chan<- *runResult) {
-	n := len(center)
+func (r *Runner) findBestNeighbor(center *permutation, done chan<- *runResult) {
+	n := len(center.Seq)
 	size := n * (n - 1) / 2
 	if size > r.SampleSize {
 		size = r.SampleSize
 	}
 
-	var bestPerm permutation
+	var bestPerm *permutation
 	bestScore := math.Inf(1)
 	var nils int
 	scores := make([]float64, size)
 
 	for i := 0; i < size; i++ {
-		neighbor := p.NextNeighbor()
-		if v == nil {
+		neighbor := center.NextNeighbor()
+		if neighbor == nil {
 			nils++
 			continue
 		}
@@ -125,15 +107,15 @@ func (r *Runner) findBestNeighbor(center permutation, done chan<- *runResult) {
 
 // Find best permutation from sampled APPROXIMATE Hamming space
 // TODO: predict size of Hamming for max sample size
-func (r *Runner) findBestHamming(center permutation, dist int, done chan<- *runResult) {
-	var bestPerm permutation
+func (r *Runner) findBestHamming(center *permutation, dist int, done chan<- *runResult) {
+	var bestPerm *permutation
 	bestScore := math.Inf(1)
 	var nils int
 	scores := make([]float64, r.SampleSize)
 
 	for i := 0; i < r.SampleSize; i++ {
-		neighbor := p.NextHamming(dist)
-		if v == nil {
+		neighbor := center.NextHamming(dist)
+		if neighbor == nil {
 			nils++
 			continue
 		}
@@ -159,14 +141,12 @@ func (r *Runner) findBestHamming(center permutation, dist int, done chan<- *runR
 	}
 }
 
-// Consider the number of nils (followed old path) and
-func (r *Runner) interpret(rs *runResult) (permutation, bool) {
-
-	// TODO: Find variance of scores
-
-	bestPerm, _ := findBest(rs, cost)
-
-	return bestPerm, true
+// Use a greedy algorithm search for local mins, but also use stats (variance,
+// num time ended up on same path) to determine if to expand the search to a
+// greater radius (Hamming distance)
+func (r *Runner) interpret(rs *runResult, done chan<- []uint8) {
+	// TODO: ALGORITHM HERE
+	done <- rs.Perm.Seq
 }
 
 func variance(x []float64) float64 {
@@ -174,13 +154,13 @@ func variance(x []float64) float64 {
 	for _, v := range x {
 		sum += v
 	}
-	mean := sum / len(x)
+	mean := sum / float64(len(x))
 
 	var sumsq float64
 	for _, v := range x {
 		sumsq += math.Pow(v-mean, 2)
 	}
-	vari := sumsq / len(x)
+	vari := sumsq / float64(len(x))
 
 	return vari
 }
