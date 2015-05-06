@@ -1,6 +1,7 @@
 package search
 
 import (
+	"errors"
 	"math/rand"
 )
 
@@ -47,8 +48,15 @@ func (p permutation) Neighborhood() []permutation {
 	return perms
 }
 
-func (p permutation) Hamming(r int) []permutation {
-	return nil
+// Returns all permutations within Hamming distance d
+func (p permutation) Hamming(d int) []permutation {
+	if d < 2 {
+		panic(errors.New("No permutations have a Hamming distance less than 2"))
+		return []permutation{}
+	}
+
+	// WTF do I do for d != 2 ?!?
+	return p.Neighborhood()
 }
 
 // Hashes a permutation of fixed length n to a number between
