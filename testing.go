@@ -12,10 +12,23 @@ import (
 )
 
 func AllTests() {
-	testQAPLIBData()
-	testGen()
-	testPermutation()
-	testSearch()
+// 	testQAPLIBData()
+// 	testGen()
+// 	testPermutation()
+// 	testSearch()
+  testHash()
+}
+
+func testHash() {
+  p1 := search.NewPerm([]uint8{1, 2, 4, 3})
+	p2 := search.NewPerm([]uint8{4, 1, 2, 3})
+	fmt.Println(p1)
+	fmt.Println(p2)
+	fmt.Println()
+	fmt.Println("Ordered by hash from zero:")
+	for i := 0; i < 24; i++ {
+	  fmt.Println(p1.NextNeighbor()) 
+	}
 }
 
 func testSearch() {

@@ -2,6 +2,8 @@ package search
 
 import (
 	"errors"
+	"fmt"
+	"math"
 	"math/rand"
 )
 
@@ -12,6 +14,10 @@ var (
 type permutation struct {
 	Seq []uint8
 	pos int
+}
+
+func (p *permutation) String() string {
+   return fmt.Sprint(p.pos, ": ", p.Seq)
 }
 
 // Create a permutation of 1...n from an int slice
@@ -53,18 +59,15 @@ func (p *permutation) Neighborhood() []*permutation {
 
 // Returns the next permutation in a 2-exchange neighborhood of p
 func (p *permutation) NextNeighbor() *permutation {
-	s := make([]uint8, len(p.Seq))
-	copy(s, p.Seq)
+  // Cycle position 1
+  p.pos++
+  if p.pos == len(p.Seq) {
+    p.pos = 0
+  }
+  
+  // Unhash by position
+	s := p.Unhash()
 
-	// TODO
-	//
-	// n := len(s)
-	//
-	// if p.pos%2 == 0 {
-	// 	s[n-1], s[n-2] = s[n-2], s[n-1]
-	// }
-
-	p.pos++
 	return NewPerm(s)
 }
 
@@ -124,6 +127,26 @@ func Exchange3Rand(seq []uint8) []uint8 {
 // array.
 func (p *permutation) Hash() uint64 {
 	return hash(p.Seq, 0)
+}
+
+func (p *permutation) Unhash() []uint8 {
+  n := len(p.Seq)
+	s := make([]uint8, n)
+	
+	ints := make([]uint8, n)
+	for i, _ := range ints {
+	  ints[i] = uint8(i+1)
+	}
+	
+	hsh := float64(p.pos)
+	for i := 0; i < n; i++ {
+	  fac := fact(uint64(n - 1 - i))
+	  order := math.Floor(hsh / float64(fac))
+	  s[i] = ints[int(order)]
+	 // ints = append(ints[:int(order)], ints[int(order)+1:]...)
+	}
+	
+	return s
 }
 
 func hash(seq []uint8, pos int) uint64 {
