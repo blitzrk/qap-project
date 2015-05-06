@@ -47,6 +47,10 @@ func (p permutation) Neighborhood() []permutation {
 	return perms
 }
 
+func (p permutation) Hamming(r int) []permutation {
+	return nil
+}
+
 // Hashes a permutation of fixed length n to a number between
 // 0 and n!-1 so that a related state may be toggled in a bit
 // array.

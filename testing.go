@@ -40,6 +40,8 @@ func testSearch() {
 	runner := &search.Runner{
 		NumCPU: 4,
 		Cost:   cost,
+		Radius: 2,
+		Sample: 50,
 	}
 
 	// Run on all 4 cores
