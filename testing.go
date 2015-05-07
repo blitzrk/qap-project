@@ -20,6 +20,7 @@ func AllTests() {
 }
 
 func testHash() {
+  p0 := search.NewPerm([]uint8{4, 3, 2, 1})
   p1 := search.NewPerm([]uint8{1, 2, 4, 3})
 	p2 := search.NewPerm([]uint8{4, 1, 2, 3})
 	fmt.Println(p1)
@@ -27,7 +28,7 @@ func testHash() {
 	fmt.Println()
 	fmt.Println("Ordered by hash from zero:")
 	for i := 0; i < 24; i++ {
-	  fmt.Println(p1.NextNeighbor()) 
+	  fmt.Println(p0.NextNeighbor())
 	}
 }
 

@@ -61,7 +61,7 @@ func (p *permutation) Neighborhood() []*permutation {
 func (p *permutation) NextNeighbor() *permutation {
   // Cycle position 1
   p.pos++
-  if p.pos == len(p.Seq) {
+  if p.pos == int(fact(uint64(len(p.Seq)))) {
     p.pos = 0
   }
   
@@ -141,9 +141,22 @@ func (p *permutation) Unhash() []uint8 {
 	hsh := float64(p.pos)
 	for i := 0; i < n; i++ {
 	  fac := fact(uint64(n - 1 - i))
-	  order := math.Floor(hsh / float64(fac))
-	  s[i] = ints[int(order)]
-	 // ints = append(ints[:int(order)], ints[int(order)+1:]...)
+	  order := int(math.Floor(hsh / float64(fac)))
+	  s[i] = ints[order]
+	  
+	  // Keep track of the remaining elements (in order)
+	  ints = append(ints[:order], ints[order+1:]...)
+	  
+	  // Subtract out contribution to hash
+	  factor := s[i]
+  	for j := 0; j < i; j++ {
+  		if s[j] < s[i] {
+  			factor--
+  		}
+  	}
+  	factor--
+  	
+	  hsh -= float64(factor) * float64(fac)
 	}
 	
 	return s
@@ -155,14 +168,14 @@ func hash(seq []uint8, pos int) uint64 {
 		return 0
 	}
 
-	s, factor := seq[pos], seq[pos]
+	s, order := seq[pos], seq[pos]
 	for i := 0; i < pos; i++ {
 		if seq[i] < s {
-			factor--
+			order--
 		}
 	}
 
-	return uint64(factor-1)*fact(uint64(n-1-pos)) + hash(seq, pos+1)
+	return uint64(order-1)*fact(uint64(n-1-pos)) + hash(seq, pos+1)
 }
 
 func fact(i uint64) uint64 {
