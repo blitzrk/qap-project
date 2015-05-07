@@ -13,7 +13,7 @@ var (
 )
 
 func init() {
-	file, err := os.OpenFile("go.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	file, err := os.OpenFile("go.log", os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
 		log.Fatalln("Failed to open log file", os.Stderr, ":", err)
 	}
@@ -75,6 +75,15 @@ func (r *Runner) search(perm *permutation, done chan<- *Result) {
 	go r.interpret(result, done)
 }
 
+func (r *Runner) searchHamming(perm *permutation, dist int, done chan<- *Result) {
+	collect := make(chan *runResult)
+	go r.sampleHammingRegion(perm, dist, collect)
+
+	// Change what gets sent here
+	result := <-collect
+	go r.interpret(result, done)
+}
+
 // Find best permutation
 func (r *Runner) findBestNeighbor(center *permutation, done chan<- *runResult) {
 	n := len(center.Seq)
@@ -96,12 +105,13 @@ func (r *Runner) findBestNeighbor(center *permutation, done chan<- *runResult) {
 	}
 
 	isLocalOpt := false
-	if centerScore := r.Objective(center); bestScore <= centerScore {
+	if centerScore := r.Objective(center); bestScore > centerScore {
 		bestScore = centerScore
 		bestPerm = center
 		isLocalOpt = true
 	}
 
+	// logger.Println(scores)
 	vari := variance(scores)
 
 	done <- &runResult{
@@ -133,7 +143,7 @@ func (r *Runner) sampleHammingRegion(center *permutation, dist int, done chan<- 
 	}
 
 	isLocalOpt := false
-	if centerScore := r.Objective(center); bestScore <= centerScore {
+	if centerScore := r.Objective(center); bestScore > centerScore {
 		bestScore = centerScore
 		bestPerm = center
 		isLocalOpt = true
@@ -155,9 +165,9 @@ func (r *Runner) sampleHammingRegion(center *permutation, dist int, done chan<- 
 // num time ended up on same path) to determine if to expand the search to a
 // greater radius (Hamming distance)
 func (r *Runner) interpret(rs *runResult, done chan<- *Result) {
-	logger.Println("Interpreting: ", rs)
 	// If the solution is optimal, then we're done!
 	if rs.Opt {
+		logger.Println("Found optimal solution score: ", rs.Score)
 		done <- &Result{
 			Score: rs.Score,
 			Perm:  rs.Perm.Seq,
@@ -168,17 +178,19 @@ func (r *Runner) interpret(rs *runResult, done chan<- *Result) {
 	// Check if already been to the proposed next step
 	if r.fs.Test(rs.Perm) {
 		// No need to continue further
+		logger.Println("Entered previous path")
 		done <- nil
 		return
 	}
+	// logger.Println("Continuing...")
 	r.fs.Store(rs.Perm)
+	// logger.Println("Variance: ", rs.Var)
 
 	// If variance is small look more broadly
 	// Otherwise, just follow the best path
-	logger.Println("Variance: ", rs.Var)
 	if rs.Var < r.VarCutoff {
-		// TODO: Change to use Hamming
-		r.search(rs.Perm, done)
+		logger.Println("Searching to Hamming dist ", rs.FinalR+1)
+		r.searchHamming(rs.Perm, rs.FinalR+1, done)
 	} else {
 		r.search(rs.Perm, done)
 	}

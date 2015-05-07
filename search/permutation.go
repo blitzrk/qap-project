@@ -62,28 +62,22 @@ func (p *permutation) Neighborhood() []*permutation {
 
 // Returns the next permutation in a 2-exchange neighborhood of p
 func (p *permutation) NextNeighbor() *permutation {
-	i := p.i
-	j := p.j
-
 	// Cycle position 1
-	j++
-	if j == p.length {
-		i++
-		if i == p.length {
-			i = 0
+	p.j++
+	if p.j == p.length {
+		p.i++
+		if p.i == p.length {
+			p.i = 0
 		}
-		j = 0
+		p.j = 0
 	}
 
 	// Perform swaps
 	s := make([]uint8, p.length)
 	copy(s, p.Seq)
-	s[j], s[i] = s[i], s[j]
+	s[p.j], s[p.i] = s[p.i], s[p.j]
 
-	// Find new hash
-	h := hash(s, 0)
-
-	return &permutation{s, h, len(s), i, j}
+	return NewPerm(s)
 }
 
 // After extensive research, no efficient algorithm for enumerating all permutations within

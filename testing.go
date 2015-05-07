@@ -55,8 +55,8 @@ func testSearch() {
 	runner := &search.Runner{
 		NumCPU:     runtime.NumCPU(),
 		Cost:       cost,
-		VarCutoff:  5,
-		SampleSize: 50,
+		VarCutoff:  1000 * 1000,
+		SampleSize: 1000,
 	}
 
 	// Run on all 4 cores
