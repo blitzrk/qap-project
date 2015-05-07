@@ -48,8 +48,10 @@ loop:
 			<-limit
 			// Check if entire solution space traversed
 			if r.fs.Full() {
+				// Let remaining processes finish
 				for i := 0; i < r.NumCPU-1; i++ {
 					resultChan <- <-done
+					<-limit
 				}
 				complete <- true
 			}
@@ -77,7 +79,6 @@ func (r *Runner) search(perm *permutation, done chan<- *Result) {
 	// Check if already been to the proposed next step
 	if r.fs.Test(perm) {
 		// No need to continue further
-		logger.Println("Entered previous path")
 		done <- nil
 		return
 	}
@@ -115,7 +116,7 @@ func (r *Runner) findBestNeighbor(center *permutation, done chan<- *runResult) {
 		score := r.Objective(neighbor)
 		scores[i] = score
 
-		if score <= bestScore {
+		if score < bestScore {
 			bestScore = score
 			bestPerm = neighbor
 		}
@@ -157,7 +158,7 @@ func (r *Runner) sampleHammingRegion(center *permutation, dist int, done chan<- 
 		score := r.Objective(neighbor)
 		scores[i] = score
 
-		if score <= bestScore {
+		if score < bestScore {
 			bestScore = score
 			bestPerm = neighbor
 		}

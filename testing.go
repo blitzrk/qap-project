@@ -33,7 +33,7 @@ func testHash() {
 
 func testSearch() {
 	// Setup data generator
-	n := 6
+	n := 8
 	gen := data.New(n, 100000)
 
 	// Generate data
@@ -51,7 +51,7 @@ func testSearch() {
 	}
 
 	// Setup runner
-	maxTime := time.NewTimer(5 * time.Minute)
+	maxTime := time.NewTimer(15 * time.Minute)
 	runner := &search.Runner{
 		NumCPU:    runtime.NumCPU(),
 		Cost:      cost,
