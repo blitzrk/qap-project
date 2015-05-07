@@ -11,17 +11,12 @@ import (
 	"time"
 )
 
-var (
-	fact func(int) uint
-)
-
 func AllTests() {
-	fact = factorial()
-	// testQAPLIBData()
-	// testGen()
-	// testPermutation()
+	testQAPLIBData()
+	testGen()
+	testPermutation()
 	testSearch()
-	// testHash()
+	testHash()
 }
 
 func testHash() {
@@ -144,17 +139,4 @@ func readDat(fname string) ([]matrix.Matrix, error) {
 	}
 
 	return dat.Read(f), nil
-}
-
-func factorial() func(int) uint {
-	memo := []uint{1}
-
-	fact := func(i int) uint {
-		if i >= len(memo) {
-			memo = append(memo, uint(i)*fact(i-1))
-		}
-		return memo[i]
-	}
-
-	return fact
 }
