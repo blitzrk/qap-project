@@ -33,7 +33,7 @@ func testHash() {
 
 func testSearch() {
 	// Setup data generator
-	n := 3
+	n := 4
 	gen := data.New(n, 100000)
 
 	// Generate data
@@ -51,11 +51,11 @@ func testSearch() {
 	}
 
 	// Setup runner
-	maxTime := time.After(5 * time.Minute)
+	maxTime := time.NewTimer(5 * time.Minute)
 	runner := &search.Runner{
 		NumCPU:    runtime.NumCPU(),
 		Cost:      cost,
-		VarCutoff: 1000 * 1000,
+		VarCutoff: 0,
 		ProbSize:  fact(n),
 	}
 
@@ -73,9 +73,10 @@ loop:
 				fmt.Println(res.Score, res.Perm)
 			}
 		case <-completed:
+			// Bug: may lose last few solutions due to race condition
 			fmt.Println("Completed entire search.")
 			break loop
-		case <-maxTime:
+		case <-maxTime.C:
 			quit <- 1
 			fmt.Println("Time out.")
 			break loop

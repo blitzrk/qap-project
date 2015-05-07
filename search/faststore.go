@@ -14,13 +14,13 @@ func NewFS(size uint) *fastStore {
 }
 
 func (fs *fastStore) Store(p *permutation) {
-	(*fs).SetBit(&(fs.Int), int(p.Hash()), uint(1))
+	fs.Int.SetBit(&fs.Int, int(p.hash), 1)
 }
 
 func (fs *fastStore) Test(p *permutation) bool {
 	// Bug: Bit takes int, so this only works for permutations
 	// up to 20 elements for 64-bit computers
-	return (*fs).Bit(int(p.Hash())) == uint(1)
+	return fs.Int.Bit(int(p.hash)) == uint(1)
 }
 
 func (fs *fastStore) Full() bool {

@@ -71,6 +71,15 @@ type runResult struct {
 }
 
 func (r *Runner) search(perm *permutation, done chan<- *Result) {
+	// Check if already been to the proposed next step
+	if r.fs.Test(perm) {
+		// No need to continue further
+		logger.Println("Entered previous path")
+		done <- nil
+		return
+	}
+	r.fs.Store(perm)
+
 	collect := make(chan *runResult)
 	go r.findBestNeighbor(perm, collect)
 
@@ -91,7 +100,7 @@ func (r *Runner) searchHamming(perm *permutation, dist int, done chan<- *Result)
 // Find best permutation
 func (r *Runner) findBestNeighbor(center *permutation, done chan<- *runResult) {
 	n := len(center.Seq)
-	size := (n * (n - 1) / 2) - 1
+	size := (n * (n - 1) / 2)
 
 	var bestPerm *permutation
 	bestScore := math.Inf(1)
@@ -99,6 +108,7 @@ func (r *Runner) findBestNeighbor(center *permutation, done chan<- *runResult) {
 
 	for i := 0; i < size; i++ {
 		neighbor := center.NextNeighbor()
+		r.fs.Store(neighbor)
 		score := r.Objective(neighbor)
 		scores[i] = score
 
@@ -136,7 +146,7 @@ func (r *Runner) sampleHammingRegion(center *permutation, dist int, done chan<- 
 
 	// Determine a reasonable sample size
 	n := len(center.Seq)
-	size := ((n * (n - 1) / 2) - 1) * dist * dist
+	size := (n * (n - 1) / 2) * dist * dist
 	scores := make([]float64, size)
 
 	for i := 0; i < size; i++ {
@@ -173,15 +183,6 @@ func (r *Runner) sampleHammingRegion(center *permutation, dist int, done chan<- 
 // num time ended up on same path) to determine if to expand the search to a
 // greater radius (Hamming distance)
 func (r *Runner) interpret(rs *runResult, done chan<- *Result) {
-	// Check if already been to the proposed next step
-	if r.fs.Test(rs.Perm) {
-		// No need to continue further
-		logger.Println("Entered previous path")
-		done <- nil
-		return
-	}
-	r.fs.Store(rs.Perm)
-
 	// If the solution is optimal, then we're done!
 	if rs.Opt {
 		logger.Println("Found optimal solution score: ", rs.Score)
