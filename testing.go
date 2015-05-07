@@ -69,10 +69,7 @@ loop:
 		select {
 		case res := <-results:
 			if res != nil {
-				fmt.Println()
 				fmt.Println(res.Score, res.Perm)
-			} else {
-			  fmt.Println("Got nil!")
 			}
 		case <-maxTime:
 			quit <- 1
