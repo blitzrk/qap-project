@@ -12,18 +12,21 @@ var (
 )
 
 type permutation struct {
-	Seq []uint8
-	pos int
+	Seq    []uint8
+	hash   uint64
+	length int
+	i      int
+	j      int
 }
 
 func (p *permutation) String() string {
-	return fmt.Sprint(p.pos, ": ", p.Seq)
+	return fmt.Sprint(p.hash, ": ", p.Seq)
 }
 
 // Create a permutation of 1...n from an int slice
 func NewPerm(p []uint8) *permutation {
 	h := hash(p, 0)
-	return &permutation{p, int(h)}
+	return &permutation{p, h, len(p), 0, 0}
 }
 
 // Create random permutation of 1...n
@@ -41,13 +44,13 @@ func RandPerm(n int) *permutation {
 // DEPRECATED:
 // Returns all permutations within a 2-exchange neighborhood
 func (p *permutation) Neighborhood() []*permutation {
-	n := len(p.Seq)
+	n := p.length
 	perms := make([]*permutation, 0, n*(n-1)/2)
 
 	// Find 2-exchange neighborhood
-	for i := 0; i < n; i++ {
-		for j := i + 1; j < n; j++ {
-			perm := make([]uint8, len(p.Seq))
+	for i := 0; i < p.length; i++ {
+		for j := i + 1; j < p.length; j++ {
+			perm := make([]uint8, p.length)
 			copy(perm, p.Seq)
 			perm[j], perm[i] = p.Seq[i], p.Seq[j]
 			perms = append(perms, NewPerm(perm))
@@ -59,16 +62,28 @@ func (p *permutation) Neighborhood() []*permutation {
 
 // Returns the next permutation in a 2-exchange neighborhood of p
 func (p *permutation) NextNeighbor() *permutation {
+	i := p.i
+	j := p.j
+
 	// Cycle position 1
-	p.pos++
-	if p.pos == int(fact(uint64(len(p.Seq)))) {
-		p.pos = 0
+	j++
+	if j == p.length {
+		i++
+		if i == p.length {
+			i = 0
+		}
+		j = 0
 	}
 
-	// Unhash by position
-	s := p.Unhash()
+	// Perform swaps
+	s := make([]uint8, p.length)
+	copy(s, p.Seq)
+	s[j], s[i] = s[i], s[j]
 
-	return NewPerm(s)
+	// Find new hash
+	h := hash(s, 0)
+
+	return &permutation{s, h, len(s), i, j}
 }
 
 // After extensive research, no efficient algorithm for enumerating all permutations within
@@ -85,7 +100,7 @@ func (p *permutation) NextHamming(d int) *permutation {
 		return nil
 	}
 
-	s := make([]uint8, len(p.Seq))
+	s := make([]uint8, p.length)
 	copy(s, p.Seq)
 
 	for d >= 2 {
@@ -126,7 +141,8 @@ func Exchange3Rand(seq []uint8) []uint8 {
 // 0 and n!-1 so that a related state may be toggled in a bit
 // array.
 func (p *permutation) Hash() uint64 {
-	return hash(p.Seq, 0)
+	// return hash(p.Seq, 0)
+	return p.hash
 }
 
 // Strictly speaking, this is not a hashing function since it
@@ -134,17 +150,16 @@ func (p *permutation) Hash() uint64 {
 // atrocious because I wrote it half asleep. I'm not even sure
 // how it works, really.
 func (p *permutation) Unhash() []uint8 {
-	n := len(p.Seq)
-	s := make([]uint8, n)
+	s := make([]uint8, p.length)
 
-	ints := make([]uint8, n)
+	ints := make([]uint8, p.length)
 	for i, _ := range ints {
 		ints[i] = uint8(i + 1)
 	}
 
-	hsh := float64(p.pos)
-	for i := 0; i < n; i++ {
-		fac := fact(uint64(n - 1 - i))
+	hsh := float64(p.hash)
+	for i := 0; i < p.length; i++ {
+		fac := fact(uint64(p.length - 1 - i))
 		order := int(math.Floor(hsh / float64(fac)))
 		s[i] = ints[order]
 
