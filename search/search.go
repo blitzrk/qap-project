@@ -48,6 +48,9 @@ loop:
 			<-limit
 			// Check if entire solution space traversed
 			if r.fs.Full() {
+				for i := 0; i < r.NumCPU-1; i++ {
+					resultChan <- <-done
+				}
 				complete <- true
 			}
 		case <-stop:

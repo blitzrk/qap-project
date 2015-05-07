@@ -33,7 +33,7 @@ func testHash() {
 
 func testSearch() {
 	// Setup data generator
-	n := 4
+	n := 6
 	gen := data.New(n, 100000)
 
 	// Generate data
