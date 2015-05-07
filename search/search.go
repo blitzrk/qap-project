@@ -21,20 +21,20 @@ func init() {
 }
 
 type Runner struct {
-	NumCPU     int
-	Cost       matrix.Matrix4D
-	VarCutoff  float64
-	SampleSize int
-	fs         *fastStore
+	NumCPU    int
+	Cost      matrix.Matrix4D
+	VarCutoff float64
+	ProbSize  uint
+	fs        *fastStore
 }
 
-func (r *Runner) Run(stop <-chan int, resultChan chan<- *Result) {
+func (r *Runner) Run(stop <-chan int, resultChan chan<- *Result, complete chan<- bool) {
 	// maximize CPU usage
 	runtime.GOMAXPROCS(r.NumCPU)
-
-	r.fs = NewFS()
-	n := len(r.Cost)
 	limit := make(chan int, r.NumCPU)
+
+	r.fs = NewFS(r.ProbSize)
+	n := len(r.Cost)
 	done := make(chan *Result)
 
 loop:
@@ -46,6 +46,10 @@ loop:
 		case res := <-done:
 			resultChan <- res
 			<-limit
+			// Check if entire solution space traversed
+			if r.fs.Full() {
+				complete <- true
+			}
 		case <-stop:
 			break loop
 		}
@@ -129,9 +133,13 @@ func (r *Runner) findBestNeighbor(center *permutation, done chan<- *runResult) {
 func (r *Runner) sampleHammingRegion(center *permutation, dist int, done chan<- *runResult) {
 	var bestPerm *permutation
 	bestScore := math.Inf(1)
-	scores := make([]float64, r.SampleSize)
 
-	for i := 0; i < r.SampleSize; i++ {
+	// Determine a reasonable sample size
+	n := len(center.Seq)
+	size := ((n * (n - 1) / 2) - 1) * dist * dist
+	scores := make([]float64, size)
+
+	for i := 0; i < size; i++ {
 		neighbor := center.NextHamming(dist)
 		score := r.Objective(neighbor)
 		scores[i] = score
@@ -165,6 +173,15 @@ func (r *Runner) sampleHammingRegion(center *permutation, dist int, done chan<- 
 // num time ended up on same path) to determine if to expand the search to a
 // greater radius (Hamming distance)
 func (r *Runner) interpret(rs *runResult, done chan<- *Result) {
+	// Check if already been to the proposed next step
+	if r.fs.Test(rs.Perm) {
+		// No need to continue further
+		logger.Println("Entered previous path")
+		done <- nil
+		return
+	}
+	r.fs.Store(rs.Perm)
+
 	// If the solution is optimal, then we're done!
 	if rs.Opt {
 		logger.Println("Found optimal solution score: ", rs.Score)
@@ -175,14 +192,6 @@ func (r *Runner) interpret(rs *runResult, done chan<- *Result) {
 		return
 	}
 
-	// Check if already been to the proposed next step
-	if r.fs.Test(rs.Perm) {
-		// No need to continue further
-		logger.Println("Entered previous path")
-		done <- nil
-		return
-	}
-	r.fs.Store(rs.Perm)
 	// logger.Println("Variance: ", rs.Var)
 
 	// If variance is small look more broadly

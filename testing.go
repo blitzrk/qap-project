@@ -11,30 +11,30 @@ import (
 	"time"
 )
 
+var (
+	fact func(int) uint
+)
+
 func AllTests() {
-	// 	testQAPLIBData()
-	// 	testGen()
-	// 	testPermutation()
+	fact = factorial()
+	// testQAPLIBData()
+	// testGen()
+	// testPermutation()
 	testSearch()
-	//  testHash()
+	// testHash()
 }
 
 func testHash() {
-	p0 := search.NewPerm([]uint8{4, 3, 2, 1})
 	p1 := search.NewPerm([]uint8{1, 2, 4, 3})
 	p2 := search.NewPerm([]uint8{4, 1, 2, 3})
 	fmt.Println(p1)
 	fmt.Println(p2)
-	fmt.Println()
-	fmt.Println("Ordered by hash from zero:")
-	for i := 0; i < 24; i++ {
-		fmt.Println(p0.NextNeighbor())
-	}
 }
 
 func testSearch() {
 	// Setup data generator
-	gen := data.New(13, 100000)
+	n := 3
+	gen := data.New(n, 100000)
 
 	// Generate data
 	dist, err := gen.Distance()
@@ -53,16 +53,17 @@ func testSearch() {
 	// Setup runner
 	maxTime := time.After(5 * time.Minute)
 	runner := &search.Runner{
-		NumCPU:     runtime.NumCPU(),
-		Cost:       cost,
-		VarCutoff:  1000 * 1000,
-		SampleSize: 1000,
+		NumCPU:    runtime.NumCPU(),
+		Cost:      cost,
+		VarCutoff: 1000 * 1000,
+		ProbSize:  fact(n),
 	}
 
 	// Run on all 4 cores
 	quit := make(chan int)
 	results := make(chan *search.Result)
-	go runner.Run(quit, results)
+	completed := make(chan bool)
+	go runner.Run(quit, results, completed)
 
 loop:
 	for {
@@ -71,6 +72,9 @@ loop:
 			if res != nil {
 				fmt.Println(res.Score, res.Perm)
 			}
+		case <-completed:
+			fmt.Println("Completed entire search.")
+			break loop
 		case <-maxTime:
 			quit <- 1
 			fmt.Println("Time out.")
@@ -80,17 +84,17 @@ loop:
 }
 
 func testPermutation() {
-	fs := search.NewFS()
-	p1 := search.NewPerm([]uint8{1, 2, 4, 3})
-	p2 := search.NewPerm([]uint8{4, 1, 2, 3})
+	fs := search.NewFS(2)
+	p1 := search.NewPerm([]uint8{1, 2})
+	p2 := search.NewPerm([]uint8{2, 1})
 	fs.Store(p1)
 
-	fmt.Println()
 	fmt.Println(p1.Hash())
-	fmt.Println()
 	fmt.Println(p2.Hash())
-	fmt.Println()
 	fmt.Println(fs.Test(p1), fs.Test(p2))
+	fmt.Println(fs.Full())
+	fs.Store(p2)
+	fmt.Println(fs.Full())
 }
 
 func testGen() {
@@ -139,4 +143,17 @@ func readDat(fname string) ([]matrix.Matrix, error) {
 	}
 
 	return dat.Read(f), nil
+}
+
+func factorial() func(int) uint {
+	memo := []uint{1}
+
+	fact := func(i int) uint {
+		if i >= len(memo) {
+			memo = append(memo, uint(i)*fact(i-1))
+		}
+		return memo[i]
+	}
+
+	return fact
 }
