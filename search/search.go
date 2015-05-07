@@ -87,7 +87,7 @@ func (r *Runner) searchHamming(perm *permutation, dist int, done chan<- *Result)
 // Find best permutation
 func (r *Runner) findBestNeighbor(center *permutation, done chan<- *runResult) {
 	n := len(center.Seq)
-	size := n * (n - 1) / 2
+	size := (n * (n - 1) / 2) - 1
 
 	var bestPerm *permutation
 	bestScore := math.Inf(1)
@@ -105,7 +105,7 @@ func (r *Runner) findBestNeighbor(center *permutation, done chan<- *runResult) {
 	}
 
 	isLocalOpt := false
-	if centerScore := r.Objective(center); bestScore > centerScore {
+	if centerScore := r.Objective(center); bestScore >= centerScore {
 		bestScore = centerScore
 		bestPerm = center
 		isLocalOpt = true
@@ -143,7 +143,7 @@ func (r *Runner) sampleHammingRegion(center *permutation, dist int, done chan<- 
 	}
 
 	isLocalOpt := false
-	if centerScore := r.Objective(center); bestScore > centerScore {
+	if centerScore := r.Objective(center); bestScore >= centerScore {
 		bestScore = centerScore
 		bestPerm = center
 		isLocalOpt = true
@@ -182,7 +182,6 @@ func (r *Runner) interpret(rs *runResult, done chan<- *Result) {
 		done <- nil
 		return
 	}
-	// logger.Println("Continuing...")
 	r.fs.Store(rs.Perm)
 	// logger.Println("Variance: ", rs.Var)
 
@@ -192,6 +191,7 @@ func (r *Runner) interpret(rs *runResult, done chan<- *Result) {
 		logger.Println("Searching to Hamming dist ", rs.FinalR+1)
 		r.searchHamming(rs.Perm, rs.FinalR+1, done)
 	} else {
+		logger.Println("=> ", rs.Perm)
 		r.search(rs.Perm, done)
 	}
 }

@@ -94,7 +94,7 @@ func testPermutation() {
 }
 
 func testGen() {
-	gen := data.New(13, 100000)
+	gen := data.New(5, 10000)
 
 	dist, err := gen.Distance()
 	if err != nil {
