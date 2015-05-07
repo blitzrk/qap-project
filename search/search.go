@@ -155,6 +155,7 @@ func (r *Runner) sampleHammingRegion(center *permutation, dist int, done chan<- 
 // num time ended up on same path) to determine if to expand the search to a
 // greater radius (Hamming distance)
 func (r *Runner) interpret(rs *runResult, done chan<- *Result) {
+  logger.Println("Interpreting: ", rs)
 	// If the solution is optimal, then we're done!
 	if rs.Opt {
 		done <- &Result{

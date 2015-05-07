@@ -71,9 +71,12 @@ loop:
 			if res != nil {
 				fmt.Println()
 				fmt.Println(res.Score, res.Perm)
+			} else {
+			  fmt.Println("Got nil!")
 			}
 		case <-maxTime:
 			quit <- 1
+			fmt.Println("Time out.")
 			break loop
 		}
 	}
