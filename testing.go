@@ -12,23 +12,23 @@ import (
 )
 
 func AllTests() {
-// 	testQAPLIBData()
-// 	testGen()
-// 	testPermutation()
-// 	testSearch()
-  testHash()
+	// 	testQAPLIBData()
+	// 	testGen()
+	// 	testPermutation()
+	testSearch()
+	//  testHash()
 }
 
 func testHash() {
-  p0 := search.NewPerm([]uint8{4, 3, 2, 1})
-  p1 := search.NewPerm([]uint8{1, 2, 4, 3})
+	p0 := search.NewPerm([]uint8{4, 3, 2, 1})
+	p1 := search.NewPerm([]uint8{1, 2, 4, 3})
 	p2 := search.NewPerm([]uint8{4, 1, 2, 3})
 	fmt.Println(p1)
 	fmt.Println(p2)
 	fmt.Println()
 	fmt.Println("Ordered by hash from zero:")
 	for i := 0; i < 24; i++ {
-	  fmt.Println(p0.NextNeighbor())
+		fmt.Println(p0.NextNeighbor())
 	}
 }
 
@@ -51,25 +51,27 @@ func testSearch() {
 	}
 
 	// Setup runner
-	maxTime := time.After(4 * time.Second)
+	maxTime := time.After(5 * time.Minute)
 	runner := &search.Runner{
-		NumCPU:      runtime.NumCPU(),
-		Cost:        cost,
-		StartRadius: 2,
-		SampleSize:  50,
+		NumCPU:     runtime.NumCPU(),
+		Cost:       cost,
+		VarCutoff:  5,
+		SampleSize: 50,
 	}
 
 	// Run on all 4 cores
 	quit := make(chan int)
-	results := make(chan []uint8)
+	results := make(chan *search.Result)
 	go runner.Run(quit, results)
 
 loop:
 	for {
 		select {
 		case res := <-results:
-			fmt.Println()
-			fmt.Println(res)
+			if res != nil {
+				fmt.Println()
+				fmt.Println(res.Score, res.Perm)
+			}
 		case <-maxTime:
 			quit <- 1
 			break loop

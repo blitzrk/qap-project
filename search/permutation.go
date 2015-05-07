@@ -17,7 +17,7 @@ type permutation struct {
 }
 
 func (p *permutation) String() string {
-   return fmt.Sprint(p.pos, ": ", p.Seq)
+	return fmt.Sprint(p.pos, ": ", p.Seq)
 }
 
 // Create a permutation of 1...n from an int slice
@@ -59,13 +59,13 @@ func (p *permutation) Neighborhood() []*permutation {
 
 // Returns the next permutation in a 2-exchange neighborhood of p
 func (p *permutation) NextNeighbor() *permutation {
-  // Cycle position 1
-  p.pos++
-  if p.pos == int(fact(uint64(len(p.Seq)))) {
-    p.pos = 0
-  }
-  
-  // Unhash by position
+	// Cycle position 1
+	p.pos++
+	if p.pos == int(fact(uint64(len(p.Seq)))) {
+		p.pos = 0
+	}
+
+	// Unhash by position
 	s := p.Unhash()
 
 	return NewPerm(s)
@@ -129,36 +129,40 @@ func (p *permutation) Hash() uint64 {
 	return hash(p.Seq, 0)
 }
 
+// Strictly speaking, this is not a hashing function since it
+// can be easily reversed. Naming conventions for variables are
+// atrocious because I wrote it half asleep. I'm not even sure
+// how it works, really.
 func (p *permutation) Unhash() []uint8 {
-  n := len(p.Seq)
+	n := len(p.Seq)
 	s := make([]uint8, n)
-	
+
 	ints := make([]uint8, n)
 	for i, _ := range ints {
-	  ints[i] = uint8(i+1)
+		ints[i] = uint8(i + 1)
 	}
-	
+
 	hsh := float64(p.pos)
 	for i := 0; i < n; i++ {
-	  fac := fact(uint64(n - 1 - i))
-	  order := int(math.Floor(hsh / float64(fac)))
-	  s[i] = ints[order]
-	  
-	  // Keep track of the remaining elements (in order)
-	  ints = append(ints[:order], ints[order+1:]...)
-	  
-	  // Subtract out contribution to hash
-	  factor := s[i]
-  	for j := 0; j < i; j++ {
-  		if s[j] < s[i] {
-  			factor--
-  		}
-  	}
-  	factor--
-  	
-	  hsh -= float64(factor) * float64(fac)
+		fac := fact(uint64(n - 1 - i))
+		order := int(math.Floor(hsh / float64(fac)))
+		s[i] = ints[order]
+
+		// Keep track of the remaining elements (in order)
+		ints = append(ints[:order], ints[order+1:]...)
+
+		// Subtract out contribution to hash
+		factor := s[i]
+		for j := 0; j < i; j++ {
+			if s[j] < s[i] {
+				factor--
+			}
+		}
+		factor--
+
+		hsh -= float64(factor) * float64(fac)
 	}
-	
+
 	return s
 }
 
